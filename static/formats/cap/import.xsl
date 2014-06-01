@@ -58,6 +58,8 @@
                 <xsl:value-of select="cap:identifier" />
             </xsl:attribute>
 
+            <data field="is_template">F</data>
+            <data field="template_id">1</data>
             <data field="identifier">
                 <xsl:value-of select="cap:identifier" />
             </data>
@@ -115,7 +117,14 @@
                 <xsl:value-of select="cap:language" />
             </data>
             <data field="category">
-                <xsl:value-of select="cap:category" />
+                    <xsl:text>|</xsl:text>
+                    <xsl:for-each select="cap:category">
+                        <xsl:value-of select="."/>
+                        <xsl:if test="position()!=last()">
+                            <xsl:text>|</xsl:text>
+                        </xsl:if>
+                    </xsl:for-each>
+                    <xsl:text>|</xsl:text>
             </data>
             <data field="event">
                 <xsl:value-of select="cap:event" />

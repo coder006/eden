@@ -1,0 +1,22 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+<identifier>coder-PC-2014/93/25T17:05:15-5</identifier>
+<sender>coder-PC/2</sender>
+<sent>2014-05-27T21:33:04+00:00</sent>
+<status>Actual</status>
+<msgType>Alert</msgType>
+<source>sri lanka</source>
+<scope>Public</scope>
+<addresses/>
+<incidents>aviation.aircraftCrash</incidents>
+<info>
+<language>en</language>
+<category>Rescue</category>
+<category>Fire</category>
+<event>qqww</event>
+<priority>Urgent</priority>
+<urgency>Immediate</urgency>
+<severity>Extreme</severity>
+<certainty>Observed</certainty>
+</info>
+</alert>

@@ -197,7 +197,9 @@ if len(pop_list) > 0:
 
     # CAP module
     if has_module("cap"):
-        db.cap_alert.insert(template_title="Default", is_template=True)
+        db.cap_alert.insert(template_title="Default", is_template=True, \
+            status="Draft", scope="Public", msg_type="Alert", \
+            uuid="www.sahanafoundation.org/Default-CAP-Template")
 
     # Incident Reporting System
     if has_module("irs"):

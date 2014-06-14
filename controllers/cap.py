@@ -270,6 +270,28 @@ def template():
     return output
 
 # -----------------------------------------------------------------------------
+def resource():
+    """ REST controller for CAP Resource """
+
+    def postp(r, output):
+        if r.interactive and r.component and r.component_name == "area_resource":
+            # Modify action button to open cap/area_location directly.
+            #read_url = URL(c="cap", f="area_location", args=["[id]"])
+            if 
+            update_url = URL(c="cap", f="area_location", args=["[id]", "update"])
+            delete_url = URL(c="cap", f="area_location", args=["[id]", "delete"])
+            s3_action_buttons(r,
+                              update_url=update_url,
+                              delete_url=delete_url,
+                             )
+        return output
+    s3.postp = postp
+
+    output = s3_rest_controller("cap", "area",
+                                rheader=s3db.cap_area_rheader)
+    return output
+
+# -----------------------------------------------------------------------------
 def add_submit_button(form, name, value):
     """
         Append a submit button to a form

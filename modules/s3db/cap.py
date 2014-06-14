@@ -33,6 +33,7 @@ __all__ = ["S3CAPModel",
            "cap_alert_rheader",
            "cap_template_rheader",
            "cap_info_rheader",
+           "cap_resource_rheader",
            ]
 
 import datetime
@@ -66,6 +67,7 @@ class S3CAPModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # List of Incident Categories -- copied from irs module <--
@@ -595,6 +597,7 @@ class S3CAPModel(S3Model):
         #
         tablename = "cap_resource"
         define_table(tablename,
+                     super_link("doc_id", "doc_entity"),
                      info_id(),
                      alert_id(writable=False),
                      Field("resource_desc", required=True),
@@ -614,6 +617,7 @@ class S3CAPModel(S3Model):
 
         configure(tablename,
                   onaccept = update_alert_id(tablename),
+                  super_entity = "doc_entity",
                   )
 
         # ---------------------------------------------------------------------
@@ -832,6 +836,25 @@ class S3CAPModel(S3Model):
         return True
 
 # =============================================================================
+    @staticmethod
+    def resource_represent(id, row=None):
+        """
+            Represent an alert information resource
+        """
+
+        if row:
+            pass
+        elif not id:
+            return current.messages["NONE"]
+        else:
+            db = current.db
+            table = db.cap_resource
+            row = db(table.id == id).select(table.resource_desc,
+                                            limitby=(0, 1)).first()
+
+        return row.resource_desc
+
+# =============================================================================
 def cap_info_labels():
     """
         Labels for CAP info segments
@@ -916,6 +939,20 @@ def cap_alert_rheader(r):
                          )
             return rheader
     return None
+
+# =============================================================================
+"""def cap_resource_rheader():
+    Resource Header for Resource
+    
+    if r.representation == "html":
+        item = r.record
+        if item:
+            
+            T = current.T
+            tabs = [
+                    (T())
+                   ]
+"""
 
 # =============================================================================
 def cap_template_rheader(r):

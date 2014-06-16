@@ -70,6 +70,7 @@ class S3CAPModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # List of Incident Categories -- copied from irs module <--
@@ -462,6 +463,7 @@ class S3CAPModel(S3Model):
         tablename = "cap_info"
         define_table(tablename,
                      alert_id(),
+                     super_link("doc_id", "doc_entity"),
                      Field("is_template", "boolean",
                            default=True,
                            readable=False,
@@ -588,11 +590,13 @@ class S3CAPModel(S3Model):
         configure(tablename,
                   create_next = URL(f="info", args=["[id]", "area"]),
                   onaccept = self.info_onaccept,
+                  super_entity = "doc_entity",
                   )
 
         # Components
         add_components(tablename,
-                       cap_resource = "info_id",
+                       doc_document = "doc_id",
+                       doc_image = "doc_id",
                        cap_area = "info_id",
                        )
 
@@ -1160,7 +1164,9 @@ def cap_info_rheader(r):
 
             tabs = [
                     (T("Information"), None),
-                    (T("Resource Files"), "resource"),
+                    #(T("Resource Files"), "resource"),
+                    (T("Resource Documents"), "document"),
+                    (T("Resource Media"), "image"),
                    ]
 
             if cap_alert_is_template(item.alert_id):

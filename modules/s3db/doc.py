@@ -101,6 +101,7 @@ class S3DocumentLibrary(S3Model):
                                vulnerability_document=T("Vulnerability Document"),
                                vulnerability_risk=T("Risk"),
                                vulnerability_evac_route=T("Evacuation Route"),
+                               cap_info=T("CAP Info"),
                                )
 
         tablename = "doc_entity"
@@ -136,6 +137,9 @@ class S3DocumentLibrary(S3Model):
                            # Allow Name to be added onvalidation
                            requires = IS_EMPTY_OR(IS_LENGTH(128)),
                            label = T("Name")
+                           ),
+                     Field("mime_type",
+                           label = T("Mime Type"),
                            ),
                      Field("url",
                            label = T("URL"),
@@ -263,6 +267,9 @@ class S3DocumentLibrary(S3Model):
                            label=T("Name")),
                      Field("url", label=T("URL"),
                            requires = IS_EMPTY_OR(IS_URL())),
+                     Field("mime_type",
+                           label = T("Mime Type"),
+                           ),
                      Field("type", "integer",
                            requires = IS_IN_SET(doc_image_type_opts,
                                                 zero=None),

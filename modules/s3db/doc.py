@@ -44,6 +44,7 @@ class S3DocumentLibrary(S3Model):
     names = ["doc_entity",
              "doc_document",
              "doc_document_id",
+             "doc_image_id",
              "doc_image",
              ]
 
@@ -307,7 +308,15 @@ class S3DocumentLibrary(S3Model):
         # ---------------------------------------------------------------------
         # Pass model-global names to response.s3
         #
-        return dict(doc_document_id=document_id)
+        image_id = S3ReusableField("image_id", "reference %s" % tablename,
+                                      label = T("Image"),
+                                      ondelete = "CASCADE",
+                                      represent = doc_image_represent,
+                                      requires = IS_ONE_OF(db,
+                                                           "doc_image.id",
+                                                           represent),
+                                      )
+        return dict(doc_document_id=document_id, doc_image_id=image_id)
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -315,7 +324,10 @@ class S3DocumentLibrary(S3Model):
         
         document_id = S3ReusableField("document_id", "integer",
                                       readable=False, writable=False)
-        return dict(doc_document_id=document_id)
+        image_id = S3ReusableField("image_id", "integer",
+                                   readable=False, writable=False)
+        
+        return dict(doc_document_id=document_id, doc_image_id=image_id)
 
     # -------------------------------------------------------------------------
     @staticmethod

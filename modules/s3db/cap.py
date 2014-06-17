@@ -635,6 +635,8 @@ class S3CAPModel(S3Model):
                      alert_id(writable = False,
                               ),
                      info_id(),
+                     self.doc_document_id(),
+                     self.doc_image_id(),
                      Field("resource_desc",
                            requires = IS_NOT_EMPTY(),
                            ),

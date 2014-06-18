@@ -64,6 +64,8 @@ class S3CAPModel(S3Model):
              "cap_area_represent",
              "cap_area_location",
              "cap_area_tag",
+             "cap_resource_document",
+             "cap_resource_document_represent",
              ]
 
     def model(self):
@@ -378,7 +380,8 @@ class S3CAPModel(S3Model):
                                             "joinby": "alert_id",
                                             },
                        cap_info = "alert_id",
-                       cap_resource = "alert_id",
+                       #cap_resource = "alert_id",
+                       cap_resource_document = "document_id",
                        )
 
         self.set_method("cap", "alert",
@@ -620,6 +623,7 @@ class S3CAPModel(S3Model):
         add_components(tablename,
                        cap_resource = "info_id",
                        cap_area = "info_id",
+                       cap_resource_document = "document_id",
                        )
 
         # ---------------------------------------------------------------------
@@ -630,6 +634,7 @@ class S3CAPModel(S3Model):
         #   our internal UI we link these primarily to the Alert but still
         #   allow the option to differentiate by Info
         #
+        """
         tablename = "cap_resource"
         define_table(tablename,
                      alert_id(writable = False,
@@ -676,7 +681,51 @@ class S3CAPModel(S3Model):
                   # Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
                   create_onaccept = update_alert_id(tablename),
                   )
-
+        """
+        # ---------------------------------------------------------------------
+        # CAP Resource Document segments
+        #
+        # Documents sit inside the Resource segment of the export XML
+        #
+        tablename = "cap_resource_document"
+        define_table(tablename,
+                     alert_id(writable=False,
+                              ),
+                     info_id(),
+                     self.doc_document_id(),
+                     *s3_meta_fields())
+        
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Document"),
+            title_display = T("Resource Documents"),
+            title_list = T("Documents"),
+            title_update = T("Edit Document"),
+            subtitle_list = T("List Document"),
+            label_list_button = T("List Document"),
+            label_delete_button = T("Delete Document"),
+            msg_record_created = T("Document added"),
+            msg_record_modified = T("Document updated"),
+            msg_record_deleted = T("Document deleted"),
+            msg_list_empty = T("No resource document currently defined for this alert"))
+        
+        configure(tablename,
+                  create_onaccept = update_alert_id(tablename),
+                  )
+        
+        add_components(tablename,
+                       doc_document = "document_id",
+                       )
+        
+        resource_document_represent = S3Represent(lookup=tablename)
+        
+        resource_document_id = S3ReusableField("resource_document_id", "reference %s" % tablename,
+                                  label = T("Resource Documents"),
+                                  ondelete = "CASCADE",
+                                  represent = resource_document_represent,
+                                  requires = IS_ONE_OF(db, "cap_resource_document.id",
+                                                       resource_document_represent),
+                                  )
+        
         # ---------------------------------------------------------------------
         # CAP Area segments
         #
@@ -880,6 +929,7 @@ class S3CAPModel(S3Model):
                     cap_alert_represent = alert_represent,
                     cap_area_represent = area_represent,
                     cap_info_represent = info_represent,
+                    cap_resource_document_represent = resource_document_represent,
                     )
 
     # -------------------------------------------------------------------------
@@ -1118,7 +1168,8 @@ def cap_rheader(r):
                             (T("Information"), "info"),
                             (T("Area"), "area"),
                             location_tab,
-                            (T("Resource Files"), "resource"),
+                            #(T("Resource Files"), "resource"),
+                            (T("Documents"), "resource_document"),
                             ]
 
                     rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -1169,11 +1220,20 @@ def cap_rheader(r):
                                                       args=[record.area_id, "update"]))),
                                        ),
                                     ))
-
+            
+            elif tablename == "cap_resource_document":
+                rheader = DIV(TABLE(TR(TH("%s: " % T("Documents")),
+                                       TD(A(s3db.cap_resource_document_represent(record.document_id)),
+                                            _href=URL(c="cap", f="resource_document",
+                                                      args=[record.document_id, "update"])),
+                                       ),
+                                    ))
+            
             elif tablename == "cap_info":
                 # Shouldn't ever be called
                 tabs = [(T("Information"), None),
-                        (T("Resource Files"), "resource"),
+                        #(T("Resource Files"), "resource"),
+                        (T("Documents"), "resource_document"),
                         ]
 
                 if cap_alert_is_template(record.alert_id):
@@ -1266,6 +1326,24 @@ def update_alert_id(tablename):
             except:
                 # Nothing we can do
                 return
+        elif tablename == "cap_resource_document":
+            resource_document_id = form_vars.get("document_id", None)
+            if not resource_document_id:
+                item = db(table.id == _id).select(table.alert_id,
+                                                  table.document_id,
+                                                  limitby=(0,1)).first()
+                try:
+                    alert_id = item.alert_id
+                    resource_document_id = item.document_id
+                except:
+                    # Do nothing
+                    return
+                if alert_id:
+                    # Do nothing
+                    return
+            
+            dtable = db.cap_resource_document
+            resource_document = db(dtable.id == resource_document_id)
         else:    
             info_id = form_vars.get("info_id", None)
             if not info_id:

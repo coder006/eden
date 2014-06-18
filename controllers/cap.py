@@ -110,7 +110,7 @@ def alert():
                                               T("Save and edit information"),
                                               "",
                                               ),)
-            elif r.component_name in ("area", "resource"):
+            elif r.component_name in ("area", "resource_document"):
                 # Limit to those for this Alert
                 r.component.table.info_id.requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(current.db, "cap_info.id",
@@ -126,8 +126,16 @@ def alert():
                                                                   filterby="alert_id",
                                                                   filter_opts=(r.id,),
                                                                   ))
-                
-
+            """
+            elif r.component_name == "location":
+                # Limit to those for this Alert
+                r.component.table.area_id.requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(current.db, "cap_area.id",
+                                                                  s3db.cap_area_represent,
+                                                                  filterby="alert_id",
+                                                                  filter_opts=(r.id,),
+                                                                  ))
+            """
         elif r.representation == "cap" and r.method in ["create", "import"]:
             s3db.configure("gis_location",
                            xml_post_parse = s3db.cap_gis_location_xml_post_parse)
@@ -327,6 +335,37 @@ def template():
     s3.postp = postp
 
     output = s3_rest_controller("cap", "alert",
+                                rheader = s3db.cap_rheader)
+    return output
+
+# -----------------------------------------------------------------------------
+def resource_document():
+    """
+        REST controller for CAP Resource Documents
+    """
+    def prep(r):
+        if r.interactive:
+            dltable = s3db.cap_resource_document
+            dfield = dltable.document_id
+            dfield.readable = False
+            dfield.writable = False
+        return True
+    s3.prep = prep
+
+    def postp(r, output):
+        if r.interactive and r.component and r.component_name == "resource_document":
+            # Modify action button to open cap/area_location directly.
+            #read_url = URL(c="cap", f="area_location", args=["[id]"])
+            update_url = URL(c="cap", f="resource_document", args=["[id]", "update"])
+            delete_url = URL(c="cap", f="resource_document", args=["[id]", "delete"])
+            s3_action_buttons(r,
+                              update_url=update_url,
+                              delete_url=delete_url,
+                              )
+        return output
+    s3.postp = postp
+
+    output = s3_rest_controller("cap", "resource_document",
                                 rheader = s3db.cap_rheader)
     return output
 
@@ -636,12 +675,12 @@ def info_fields_comments():
               T("Any system-specific datum, in the form of key-value pairs.")))
 
 # -----------------------------------------------------------------------------
-def resource_fields_comments():
+def resource_document_fields_comments():
     """
         Add comments to Resource fields
     """
 
-    table = db.cap_resource
+    table = db.cap_resource_document
     table.resource_desc.comment = DIV(
           _class="tooltip",
           _title="%s|%s" % (

@@ -64,6 +64,7 @@ class S3CAPModel(S3Model):
              "cap_area_represent",
              "cap_area_location",
              "cap_area_tag",
+             "cap_resource_represent",
              ]
 
     def model(self):
@@ -620,6 +621,8 @@ class S3CAPModel(S3Model):
         add_components(tablename,
                        cap_resource = "info_id",
                        cap_area = "info_id",
+                       doc_document = "resource_id",
+                       doc_image = "resource_id",
                        )
 
         # ---------------------------------------------------------------------
@@ -674,10 +677,20 @@ class S3CAPModel(S3Model):
                     msg_record_deleted = T("Resource deleted"),
                     msg_list_empty = T("No resources currently defined for this alert"))
 
+        resource_represent = S3Represent(lookup=tablename)
+        
         configure(tablename,
                   # Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
                   create_onaccept = update_alert_id(tablename),
                   )
+        
+        resource_id = S3ReusableField("resource_id", "reference %s" % tablename,
+                                  label = T("Resource"),
+                                  ondelete = "CASCADE",
+                                  represent = resource_represent,
+                                  requires = IS_ONE_OF(db, "cap_resource.id",
+                                                       resource_represent),
+                                  )
 
         # ---------------------------------------------------------------------
         # CAP Area segments
@@ -882,6 +895,7 @@ class S3CAPModel(S3Model):
                     cap_alert_represent = alert_represent,
                     cap_area_represent = area_represent,
                     cap_info_represent = info_represent,
+                    cap_resource_represent = resource_represent,
                     )
 
     # -------------------------------------------------------------------------

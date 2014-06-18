@@ -44,8 +44,8 @@ class S3DocumentLibrary(S3Model):
     names = ["doc_entity",
              "doc_document",
              "doc_document_id",
-             "doc_image_id",
              "doc_image",
+             "doc_image_id",
              ]
 
     def model(self):

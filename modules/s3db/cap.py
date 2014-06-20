@@ -708,8 +708,20 @@ class S3CAPModel(S3Model):
             msg_record_deleted = T("Document deleted"),
             msg_list_empty = T("No resource document currently defined for this alert"))
         
+        crud_form = S3SQLCustomForm("info_id",
+                                    S3SQLInlineComponent("document",
+                                                         name = "document",
+                                                         label = T("Documents"),
+                                                         fields = ["doc_id",
+                                                                   "file",
+                                                                   "name",
+                                                                   ],
+                                                         )
+                                    )
+        
         configure(tablename,
                   create_onaccept = update_alert_id(tablename),
+                  crud_form = crud_form,
                   )
         
         add_components(tablename,

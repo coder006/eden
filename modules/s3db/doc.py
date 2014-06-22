@@ -45,6 +45,7 @@ class S3DocumentLibrary(S3Model):
              "doc_document",
              "doc_document_id",
              "doc_image",
+             "doc_media_entity",
              ]
 
     def model(self):
@@ -112,7 +113,44 @@ class S3DocumentLibrary(S3Model):
                        doc_document = doc_id,
                        doc_image = doc_id,
                        )
-
+        
+        # ---------------------------------------------------------------------
+        #Media
+        #
+        media_entity_types = Storage(doc_document=T("Documents"),
+                                     doc_image=T("Image"),
+                                     ) 
+        
+        tablename = "doc_media_entity"
+        self.super_entity(tablename, 
+                          "media_id",
+                          media_entity_types,
+                          Field("mime_type",
+                                requires = IS_NOT_NULL(),
+                                ),
+                          Field("media_label", length=128),
+                          Field("description",
+                                label=T("Media Description"),
+                                requires = IS_NOT_NULL(),
+                                ),
+                          )
+        
+        configure(tablename,
+                  deletable = False,
+                  editable = False,
+                  list_fields = ["instance_types",
+                                 "mime_type",
+                                 "media_label",
+                                 "comments",
+                                 ],
+                  )
+        
+        media_id = "media_id"
+        add_components(tablename,
+                       doc_document = media_id,
+                       doc_image = media_id,
+                       )
+        
         # ---------------------------------------------------------------------
         # Documents
         #
@@ -122,6 +160,7 @@ class S3DocumentLibrary(S3Model):
                      self.stats_source_superlink,
                      # Component not instance
                      super_link("doc_id", "doc_entity"),
+                     super_link("media_id", "doc_media_entity"),
                      # @ToDo: Remove since Site Instances are doc entities?
                      super_link("site_id", "org_site"),
                      Field("file", "upload",
@@ -214,7 +253,7 @@ class S3DocumentLibrary(S3Model):
                   onaccept = onaccept,
                   ondelete = ondelete,
                   onvalidation = self.document_onvalidation,
-                  super_entity = "stats_source",
+                  super_entity = ("stats_source", "doc_media_entity"),
                   )
 
         # Reusable field
@@ -249,6 +288,7 @@ class S3DocumentLibrary(S3Model):
         define_table(tablename,
                      # Component not instance
                      super_link("doc_id", "doc_entity"),
+                     super_link("media_id", "doc_media_entity"),
                      super_link("pe_id", "pr_pentity"), # @ToDo: Remove & make Persons doc entities instead?
                      super_link("site_id", "org_site"), # @ToDo: Remove since Site Instances are doc entities?
                      Field("file", "upload", autodelete=True,
@@ -307,6 +347,7 @@ class S3DocumentLibrary(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  super_entity = "doc_media_entity",
                   deduplicate = self.document_duplicate,
                   onvalidation = lambda form: \
                             self.document_onvalidation(form, document=False)

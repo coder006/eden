@@ -649,7 +649,7 @@ class S3CAPModel(S3Model):
                      alert_id(writable = False,
                               ),
                      info_id(),
-                     self.super_link("doc_id", "doc_entity"),
+                     self.super_link("media_id", "doc_media_entity"),
                      Field("resource_desc",
                            requires = IS_NOT_EMPTY(),
                            ),
@@ -686,24 +686,41 @@ class S3CAPModel(S3Model):
                     msg_record_modified = T("Resource updated"),
                     msg_record_deleted = T("Resource deleted"),
                     msg_list_empty = T("No resources currently defined for this alert"))
+        
+        add_components(tablename,
+                      doc_media_entity = "media_id",
+                      doc_document = "media_id",
+                      doc_image = "media_id",
+                      )
 
         # @todo: complete custom form
         crud_form = S3SQLCustomForm(#"name",
                                     "info_id",
                                     "resource_desc",
-                                    S3SQLInlineComponent("image",
-                                                         label=T("Image"),
-                                                         fields=["file",
-                                                                 ],
+                                    S3SQLInlineComponent("media_entity",
+                                                         label=T("Media Files"),
+                                                         list_fields=["description",
+                                                                      "mime_type",
+                                                                      "~.media_id:document.file",
+                                                                      #"~.media_id$document.file",
+                                                                      #Also tried some other combinations but they don't seem to work
+                                                                      ],
                                                          ),
-                                    S3SQLInlineComponent("document",
-                                                         label=T("Document"),
-                                                         fields=["file",
-                                                                 ],
-                                                         ),
+                                    #"media_entity.media_id:doc_document.file",
+                                    
+                                    #S3SQLInlineComponent("document",
+                                    #                     label=T("Document"),
+                                    #                     list_fields=["file",
+                                    #                                  ],
+                                    #                     ),
+                                    #S3SQLInlineComponent("image",
+                                    #                     label=T("Media"),
+                                    #                     list_fields=["file",
+                                    #                                  ],
+                                    #                     ),
                                     )
         configure(tablename,
-                  super_entity = "doc_entity",
+                  super_entity = "doc_media_entity",
                   crud_form = crud_form,
                   # Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
                   create_onaccept = update_alert_id(tablename),
@@ -1298,6 +1315,27 @@ def update_alert_id(tablename):
                 alert_id = area.alert_id
             except:
                 # Nothing we can do
+                return
+        elif tablename == "cap_resource":
+            media_id = form_vars.get("media_id", None)
+            if not media_id:
+                item = db(table.id == _id).select(table.alert_id,
+                                                  table.media_id,
+                                                  limitby=(0,1)).first()
+                try:
+                    alert_id = item.alert_id
+                    media_id = item.media_id
+                except:
+                    return
+                if alert_id:
+                    return
+            
+            rtable = db.cap_resource
+            resource = db(rtable.id == media_id).select(table.alert_id,
+                                                        limitby=(0,1)).first()
+            try:
+                alert_id = resource.alert_id
+            except:
                 return
         else:    
             info_id = form_vars.get("info_id", None)
